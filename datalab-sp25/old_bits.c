@@ -1,7 +1,7 @@
 /* 
  * CS:APP Data Lab 
  * 
- * <Please put your name and userid here>
+ * 2233713332-ics
  * 
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
@@ -24,7 +24,6 @@ You will provide your solution to the Data Lab by
 editing the collection of functions in this source file.
 
 INTEGER CODING RULES:
- 
   Replace the "return" statement in each function with one
   or more lines of C code that implements the function. Your code 
   must conform to the following style:
@@ -169,8 +168,8 @@ int isZero(int x) {
  *   Max ops: 14
  *   Rating: 1
  */
-int bitXor(int x, int y) {
-   return ~(~((~x) & y) & ~((~y) & x));
+int bitXor(int x, int y) {  
+  return ~(~(~(x&y)&x)&(~(~(x&y)&y)));
 }
 // Rating 2
 /* 
@@ -181,7 +180,7 @@ int bitXor(int x, int y) {
  *   Rating: 2
  */
 int copyLSB(int x) {
-   return (x & 1) << 31 >> 31;
+  return (x&1)<<31>>31;
 }
 /* 
  * isNegative(x) - return 1 if x < 0, return 0 otherwise 
@@ -191,7 +190,7 @@ int copyLSB(int x) {
  *   Rating: 2
  */
 int isNegative(int x) {
-   return (x >> 31) & 1;
+   return (x>>31)&1;
 }
 /* 
  * allEvenBits - return 1 if all even-numbered bits in word set to 1
@@ -201,16 +200,15 @@ int isNegative(int x) {
  *   Max ops: 12
  *   Rating: 2
  */
-int allEvenBits(int x) {
-   int res;
-   int bitSel;
-   int test;
-   int isEqual;
-   bitSel = 0x55 + (0x55 << 8);
-   bitSel = bitSel + (bitSel << 16); 
-   test = x | bitSel;
-   isEqual = !(test ^ x);
-   return isEqual;
+ int allEvenBits(int x) {
+   /*a&0==0 a&1==a 
+   a|1==1 a|0==a 
+   a^0==a a^1==~a
+   */
+   int t=0x55+(0x55<<8);//0000 0000 0000 0000 0101 0101 0101 0101
+   t=t+(t<<16);//0101 0101 0101 0101 0101 0101 0101 0101
+   t=t|x;//odd bits same as x, even bits all set 1
+   return !(x^t);
 }
 /* 
  * byteSwap - swaps the nth byte and the mth byte
@@ -222,15 +220,17 @@ int allEvenBits(int x) {
  *  Rating: 2
  */
 int byteSwap(int x, int n, int m) {
-   int m_bitnum = m << 3;
-   int n_bitnum = n << 3;
-   int mask_m = 0xff << m_bitnum;
-   int mask_n = 0xff << n_bitnum;
-   int x_masked = x & (~(mask_m | mask_n));
-   int d_m_swap = mask_n & ((x & mask_m) >> m_bitnum << n_bitnum);
-   int d_n_swap = mask_m & ((x & mask_n) >> n_bitnum << m_bitnum);
-   return x_masked | d_m_swap | d_n_swap;
+   /*a&0==0 a&1==a 
+   a|1==1 a|0==a 
+   a^0==a a^1==~a
+   */
+   int res = (x&(~(0xff<<(n<<3))))&(~(0xff<<(m<<3)));
+   int mb = ((x>>(m<<3))&(0xff))<<(n<<3);//mth bit at nth pos
+   int nb = ((x>>(n<<3))&(0xff))<<(m<<3);//nth bit at mth pos
+   int b=mb|nb;
+   return res|b;
 }
+
 /* 
  * removeRightmostOne(x) - remove the rightmost 1 from x
  *   Example: removeRightOne(0b0110) = 0b0100, removeRightOne(0b0101) = 0b0100, removeRightOne(0) = 0
@@ -239,8 +239,12 @@ int byteSwap(int x, int n, int m) {
  *   Rating: 2
  */
 int removeRightmostOne(int x) {
-   int mask = x & (~x + 1);
-   return x + ~(mask) + 1;
+   /*a&0==0 a&1==a a&~a==0 a&a==a
+   a|1==1 a|0==a 
+   a^0==a a^1==~a
+   */
+   int xminus1=x+(~0);
+   return x&xminus1;
 }
 // Rating 3
 /*
@@ -252,14 +256,15 @@ int removeRightmostOne(int x) {
  *   Max ops: 20
  *   Rating: 3
  */
-int maskBelowHighest(int x)
-{
-   int res = x | (x >> 1); // 2 bits processed
-   res = res | (res >> 2); // 4 bits
-   res = res | (res >> 4); // 8
-   res = res | (res >> 8); // 16
-   res = res | (res >> 16); // 32
-   return res;
+int maskBelowHighest(int x) {
+   int shift = x;
+   shift = shift | (shift >> 1);   
+   shift = shift | (shift >> 2);  
+   shift = shift | (shift >> 4);
+   shift = shift | (shift >> 8); 
+   shift = shift | (shift >> 16); 
+
+   return shift;
 }
 /*
  * largerAbsVal - return the number who has a larger Abs. if |a| == |b|, return the first.
@@ -270,13 +275,21 @@ int maskBelowHighest(int x)
  *   Rating: 3
  */
 int largerAbsVal(int a, int b) {
-   int sgna = (a >> 31);
-   int sgnb = (b >> 31);
-   int absa = (sgna ^ a) + (sgna & 1);
-   int absb = (sgnb ^ b) + (sgnb & 1);
-   int diff = (absa + (~absb) + 1);
-   int SF = diff >> 31; // Sign Flag
-   return (~SF & a) | (SF & b);
+   //int xminus1=x+(~0);
+   //return x&xminus1;
+   /*a&0==0 a&1==a a&(~a)==0 a&a==a
+   a|1==1 a|0==a a|(~a)==1 a|a==a
+   a^0==a a^1==~a a^(~a)==1 a^a==0
+   */
+   //returnlarger: return (a+b+abs(a-b))>>2;
+   int sgna=(a>>31);//sign
+   int sgnb=(b>>31);//4ops
+   int ap= (a^sgna)+(~sgna+1);
+   int bp= (b^sgnb)+(~sgnb+1);
+   int diff= (ap+(~bp+1));
+   int sgndif=diff>>31;//plus|bigger: 0000 smaller: 1111
+   
+   return (sgndif&b) | (~sgndif&a);
 }
 // Rating 4
 /*
@@ -288,59 +301,63 @@ int largerAbsVal(int a, int b) {
  *   Rating: 4
  */
 int bitReverse(int x) {
-   int flip16;
-   int high16;
-   int low16;
-   int rev16;
-   int flip8;
-   int high8;
-   int low8;
-   int rev8;
-   int flip4;
-   int high4;
-   int low4;
-   int rev4;
-   int flip2;
-   int high2;
-   int low2;
-   int rev2;
+   // int byteSwap(int x, int n, int m) {
+   //    int res = (x&(~(0xff<<(n<<3))))&(~(0xff<<(m<<3)));
+   //    int mb = ((x>>(m<<3))&(0xff))<<(n<<3);//mth bit at nth pos
+   //    int nb = ((x>>(n<<3))&(0xff))<<(m<<3);//nth bit at mth pos
+   //    int b=mb|nb;
+   //    return res|b;
+   // }
    int flip1;
-   int high1;
-   int low1;
-   int rev;
+   int a1;
+   int a2;
+   int af;
+   int flip2;
+   int b1;
+   int b2;
+   int bf;
+   int flip3;
+   int c1;
+   int c2;
+   int cf;
+   int flip4;
+   int d1;
+   int d2;
+   int df;
+   int flip5;
+   int e1;
+   int e2;
+   int ef;
+   flip1=(0x55|0x55<<8);
+   flip1=flip1|flip1<<16;
+   a1=(x&flip1)<<1;
+   a2=((x>>1)&flip1);
+   af=a1|a2;
 
-   flip16 = (0xff << 8) | 0xff;
-   high16 = flip16 & (x >> 16);
-   low16 = (flip16 & x) << 16;
-   rev16 = high16 | low16;
-
-   flip8 = 0xff;
-   flip8 = flip8 | (flip8 << 16);
-   high8 = flip8 & (rev16 >> 8);
-   low8 = (flip8 & rev16) << 8;
-   rev8 = high8 | low8;
    
-   flip4 = (0x0f << 8) | 0x0f;
-   flip4 = flip4 | (flip4 << 16);
-   high4 = flip4 & (rev8 >> 4);
-   low4 = (flip4 & rev8) << 4;
-   rev4 = high4 | low4;
+   flip2=(0x33|0x33<<8);
+   flip2=flip2|flip2<<16;
+   b1=(af&flip2)<<2;
+   b2=((af>>2)&flip2);
+   bf=b1|b2;
 
-   flip2 = (0x33 << 8) | 0x33;
-   flip2 = (flip2 << 16) | flip2;
-   high2  = flip2 & (rev4 >> 2);
-   low2 = (flip2 & rev4) << 2;
-   rev2 = high2 | low2;
    
-   flip1 = (0x55 << 8) | 0x55;
-   flip1 = (flip1 << 16) | flip1;
-   high1 = flip1 & (rev2 >> 1);
-   low1 = (flip1 & rev2) << 1;
-   rev = high1 | low1;
-   // int flip1 = (0x55 << 8) | 0x55; // 用这种写法比较费op，所以注释掉参考一下。
-   // flip1 = (flip1 << 16) | flip1;
-   // int high1 = ~flip1 & rev2;
-   // int low1 = flip1 & rev2;
-   // int rev = ((high1 >> 1) & flip1) | (low1 << 1);
-   return rev;
+   flip3=(0x0f|0x0f<<8);
+   flip3=flip3|flip3<<16;
+   c1=(bf&flip3)<<4;
+   c2=((bf>>4)&flip3);
+   cf=c1|c2;
+
+   
+   flip4=(0xff|0xff<<16);
+   d1=(cf&flip4)<<8;
+   d2=((cf>>8)&flip4);
+   df=d1|d2;
+
+   
+   flip5=(0xff|0xff<<8);
+   e1=(df&flip5)<<16;
+   e2=((df>>16)&flip5);
+   ef= e1|e2;
+   return ef;
 }
