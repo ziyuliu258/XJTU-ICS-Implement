@@ -427,31 +427,31 @@ Disassembly of section .text:
     15d3:	55                   	push   %rbp
     15d4:	53                   	push   %rbx
     15d5:	48 83 ec 28          	sub    $0x28,%rsp
-    15d9:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax # fs通常用于指向线程局部存储，也就是将这块区域其中的一个数据放到rax返回值中
+    15d9:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
     15e0:	00 00 
-    15e2:	48 89 44 24 18       	mov    %rax,0x18(%rsp) # 把某个值放进rsp偏移0x18的地方去
-    15e7:	31 c0                	xor    %eax,%eax # 返回值置0
-    15e9:	48 89 e6             	mov    %rsp,%rsi # 把栈顶指针放在第二个参数里 令栈顶指针指向的值是读取的六个数字
+    15e2:	48 89 44 24 18       	mov    %rax,0x18(%rsp)
+    15e7:	31 c0                	xor    %eax,%eax
+    15e9:	48 89 e6             	mov    %rsp,%rsi
     15ec:	e8 12 06 00 00       	call   1c03 <read_six_numbers>
-    15f1:	83 3c 24 00          	cmpl   $0x0,(%rsp) # cmpl = cmp long type 如果rsp指向值小于0直接爆炸 也就是说rsp指向的值不能是一个负数（输入值？）
+    15f1:	83 3c 24 00          	cmpl   $0x0,(%rsp)
     15f5:	78 0a                	js     1601 <phase_2+0x32>
     15f7:	48 89 e5             	mov    %rsp,%rbp
-    15fa:	bb 01 00 00 00       	mov    $0x1,%ebx # 令ebx里值为1
-    15ff:	eb 13                	jmp    1614 <phase_2+0x45> # 跳转操作（先判断？）
+    15fa:	bb 01 00 00 00       	mov    $0x1,%ebx
+    15ff:	eb 13                	jmp    1614 <phase_2+0x45>
     1601:	e8 a5 05 00 00       	call   1bab <explode_bomb>
     1606:	eb ef                	jmp    15f7 <phase_2+0x28>
-    1608:	83 c3 01             	add    $0x1,%ebx # 如果rbp的下一位和这一位相等 就ebx的值加一
+    1608:	83 c3 01             	add    $0x1,%ebx 
     160b:	48 83 c5 04          	add    $0x4,%rbp
-    160f:	83 fb 06             	cmp    $0x6,%ebx # 检查是否有六位相同的数字
+    160f:	83 fb 06             	cmp    $0x6,%ebx 
     1612:	74 11                	je     1625 <phase_2+0x56>
-    1614:	89 d8                	mov    %ebx,%eax # 返回值设为ebx目前的值
-    1616:	03 45 00             	add    0x0(%rbp),%eax # rbp处的值+1 存入eax
-    1619:	39 45 04             	cmp    %eax,0x4(%rbp) # 下一位是否与本位+1相等
+    1614:	89 d8                	mov    %ebx,%eax 
+    1616:	03 45 00             	add    0x0(%rbp),%eax
+    1619:	39 45 04             	cmp    %eax,0x4(%rbp)
     161c:	74 ea                	je     1608 <phase_2+0x39>
     161e:	e8 88 05 00 00       	call   1bab <explode_bomb>
     1623:	eb e3                	jmp    1608 <phase_2+0x39>
-    1625:	48 8b 44 24 18       	mov    0x18(%rsp),%rax # 再把值返回到rax中去
-    162a:	64 48 2b 04 25 28 00 	sub    %fs:0x28,%rax # 如果二者不相等 就异常中止 maybe是某种防止栈溢出的措施
+    1625:	48 8b 44 24 18       	mov    0x18(%rsp),%rax
+    162a:	64 48 2b 04 25 28 00 	sub    %fs:0x28,%rax
     1631:	00 00 
     1633:	75 07                	jne    163c <phase_2+0x6d>
     1635:	48 83 c4 28          	add    $0x28,%rsp
